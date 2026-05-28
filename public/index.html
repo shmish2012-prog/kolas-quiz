@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Вікторина KOLAS 🇳🇱</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; background: #1a3c6e; min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:20px 16px; }
+  .screen { display:none; width:100%; max-width:700px; }
+  .screen.active { display:block; }
+  .card { background:#fff; border-radius:22px; padding:40px 36px; box-shadow:0 16px 50px rgba(0,0,0,0.35); text-align:center; }
+
+  .flag { font-size:56px; margin-bottom:12px; }
+  h1 { font-size:clamp(24px,5vw,34px); font-weight:900; color:#1a3c6e; line-height:1.2; margin-bottom:10px; }
+  h1 span { color:#e85d04; }
+  .subtitle { font-size:15px; color:#555; line-height:1.6; margin-bottom:20px; }
+  .badge-row { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:24px; }
+  .badge { background:#f0f4ff; border:2px solid #1a3c6e; border-radius:100px; padding:6px 14px; color:#1a3c6e; font-size:13px; font-weight:700; }
+  .divider { border:none; border-top:2px solid #e8edf5; margin:20px 0; }
+  .reg-label { font-size:15px; font-weight:800; color:#1a3c6e; margin-bottom:8px; text-align:left; }
+  .name-input { width:100%; font-size:17px; font-weight:700; color:#111; border:3px solid #d0d9f0; border-radius:13px; padding:14px 18px; outline:none; margin-bottom:5px; }
+  .name-input:focus { border-color:#1a3c6e; }
+  .name-error { color:#e63946; font-size:13px; font-weight:700; min-height:18px; margin-bottom:14px; text-align:left; }
+  .btn-orange { font-size:17px; font-weight:800; background:#e85d04; color:#fff; border:none; border-radius:13px; padding:16px 44px; cursor:pointer; box-shadow:0 5px 18px rgba(232,93,4,0.4); }
+  .btn-orange:hover { background:#c94e00; }
+  .kolas-tag { color:#999; font-size:11px; margin-top:18px; letter-spacing:1px; }
+
+  .quiz-top { background:#fff; border-radius:18px; padding:13px 20px; display:flex; align-items:center; gap:13px; margin-bottom:12px; box-shadow:0 4px 18px rgba(0,0,0,0.2); }
+  .q-who { font-size:13px; font-weight:800; color:#e85d04; white-space:nowrap; max-width:140px; overflow:hidden; text-overflow:ellipsis; }
+  .q-label { font-size:12px; font-weight:800; color:#1a3c6e; white-space:nowrap; }
+  .progress-bar { flex:1; height:9px; background:#e0e7ff; border-radius:100px; overflow:hidden; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,#e85d04,#ffd23f); border-radius:100px; transition:width 0.5s; }
+  .timer-box { width:46px; height:46px; border-radius:50%; background:#1a3c6e; color:#ffd23f; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:900; flex-shrink:0; border:3px solid #ffd23f; }
+  .timer-box.urgent { background:#e63946; border-color:#e63946; color:#fff; }
+  .question-card { background:#fff; border-radius:18px; padding:28px 28px 22px; text-align:center; margin-bottom:11px; box-shadow:0 4px 18px rgba(0,0,0,0.2); }
+  .q-number { display:inline-block; background:#e85d04; color:#fff; font-size:11px; font-weight:800; padding:5px 14px; border-radius:100px; margin-bottom:12px; }
+  .q-text { font-size:clamp(16px,2.8vw,21px); font-weight:800; color:#111; line-height:1.4; }
+  .feedback-bar { border-radius:12px; padding:12px 16px; font-size:14px; font-weight:700; margin-bottom:10px; display:none; }
+  .feedback-bar.correct { display:block; background:#d1fae5; color:#065f46; border:2px solid #34d399; }
+  .feedback-bar.wrong { display:block; background:#fee2e2; color:#7f1d1d; border:2px solid #f87171; }
+  .answers-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:11px; }
+  .answer-btn { background:#fff; border:3px solid #d0d9f0; border-radius:14px; padding:15px 16px; color:#111; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:10px; text-align:left; min-height:60px; box-shadow:0 2px 7px rgba(0,0,0,0.08); transition:all 0.15s; }
+  .answer-btn:hover:not(:disabled) { border-color:#1a3c6e; background:#f0f4ff; }
+  .answer-letter { width:30px; height:30px; border-radius:8px; background:#e0e7ff; color:#1a3c6e; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:900; flex-shrink:0; }
+  .answer-btn.correct { background:#d1fae5; border-color:#10b981; }
+  .answer-btn.correct .answer-letter { background:#10b981; color:#fff; }
+  .answer-btn.wrong { background:#fee2e2; border-color:#ef4444; }
+  .answer-btn.wrong .answer-letter { background:#ef4444; color:#fff; }
+  .answer-btn:disabled { cursor:default; }
+  .btn-yellow { font-size:15px; font-weight:800; background:#ffd23f; color:#111; border:none; border-radius:13px; padding:14px 40px; cursor:pointer; display:none; box-shadow:0 4px 14px rgba(255,210,63,0.45); }
+  .btn-yellow.visible { display:inline-block; }
+
+  .result-hero { font-size:60px; margin-bottom:10px; }
+  .result-name { font-size:20px; font-weight:900; color:#1a3c6e; margin-bottom:4px; }
+  .score-big { font-size:clamp(56px,12vw,84px); font-weight:900; line-height:1; margin:12px 0 4px; }
+  .score-label { color:#666; font-size:14px; font-weight:600; margin-bottom:10px; }
+  .rank-badge { display:inline-block; font-size:15px; font-weight:800; padding:8px 20px; border-radius:100px; margin-bottom:14px; }
+  .result-msg { color:#333; font-size:15px; line-height:1.6; margin-bottom:22px; }
+  .btn-outline { font-size:14px; font-weight:800; background:transparent; color:#1a3c6e; border:3px solid #1a3c6e; border-radius:13px; padding:12px 28px; cursor:pointer; }
+  .btn-outline:hover { background:#f0f4ff; }
+
+  @media(max-width:500px) { .answers-grid { grid-template-columns:1fr; } .card { padding:26px 16px; } .question-card { padding:20px 14px 16px; } }
+</style>
+</head>
+<body>
+
+<!-- START / REGISTER -->
+<div class="screen active" id="screen-start">
+  <div class="card">
+    <div class="flag">🇳🇱</div>
+    <h1>Вікторина:<br><span>Вартість життя</span><br>у Нідерландах</h1>
+    <p class="subtitle">Перевірте свої знання про зарплати, витрати та виплати в Нідерландах 2026.</p>
+    <div class="badge-row">
+      <div class="badge">🎯 10 питань</div>
+      <div class="badge">⏱ 30 сек</div>
+      <div class="badge">📊 Nibud / CBS 2026</div>
+    </div>
+    <hr class="divider">
+    <p class="reg-label">👤 Введіть своє ім'я:</p>
+    <input class="name-input" id="name-input" type="text" placeholder="Ваше ім'я" maxlength="40"
+      onkeydown="if(event.key==='Enter') go()" autocomplete="off" />
+    <div class="name-error" id="name-error"></div>
+    <button class="btn-orange" onclick="go()">▶ Розпочати</button>
+    <p class="kolas-tag">МИ КОЛО ВАС • kolas.nl</p>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div class="screen" id="screen-quiz">
+  <div class="quiz-top">
+    <span class="q-who" id="q-who">👤</span>
+    <span class="q-label" id="q-label">ПИТАННЯ 1/10</span>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:10%"></div></div>
+    <div class="timer-box" id="timer">30</div>
+  </div>
+  <div class="question-card">
+    <div class="q-number" id="q-number">Питання 1 з 10</div>
+    <div class="q-text" id="q-text"></div>
+  </div>
+  <div id="feedback-bar" class="feedback-bar"></div>
+  <div class="answers-grid" id="answers-grid"></div>
+  <button class="btn-yellow" id="next-btn" onclick="nextQ()">Далі →</button>
+  <p class="kolas-tag" style="color:#aac4ff;text-align:center;margin-top:12px;">KOLAS — МИ КОЛО ВАС</p>
+</div>
+
+<!-- RESULT -->
+<div class="screen" id="screen-result">
+  <div class="card">
+    <div class="result-hero" id="res-emoji">🏆</div>
+    <div class="result-name" id="res-name"></div>
+    <div class="score-big" id="res-score">0/10</div>
+    <div class="score-label">правильних відповідей</div>
+    <div class="rank-badge" id="res-rank"></div>
+    <div class="result-msg" id="res-msg"></div>
+    <button class="btn-outline" onclick="playAgain()">🔄 Зіграти ще раз</button>
+    <p class="kolas-tag">МИ КОЛО ВАС • WIJ ZIJN DICHTBIJ</p>
+  </div>
+</div>
+
+<script>
+const questions = [
+  { q:"Яка мінімальна погодинна ставка зарплати в Нідерландах для осіб від 21 року у 2026 році?", options:["€ 12,50","€ 14,71","€ 16,00","€ 13,20"], correct:1 },
+  { q:"Скільки в середньому коштує базова медична страховка на місяць?", options:["€ 75","€ 200","€ 135–160","€ 50"], correct:2 },
+  { q:"Яка максимальна орендна плата за соціальне житло в Нідерландах у 2026 році?", options:["€ 800/міс","€ 932,93/міс","€ 1.228,07/міс","€ 1.500/міс"], correct:1 },
+  { q:"На який термін видається перехідний документ після закінчення дії ВТЗ?", options:["1 рік","5 років","3 роки","Безстроково"], correct:2 },
+  { q:"Що таке 'eigen risico' у нідерландській медичній страховці?", options:["Обов'язкова власна частка — € 385/рік","Щомісячна премія","Штраф за відсутність страховки","Вид додаткової страховки"], correct:0 },
+  { q:"Який пенсійний вік (AOW) в Нідерландах у 2026 році?", options:["65 років","70 років","67 років","63 роки"], correct:2 },
+  { q:"Скільки % пенсії AOW ви накопичуєте за кожен рік в Нідерландах?", options:["1%","5%","3%","2%"], correct:3 },
+  { q:"Чи потрібно подавати заяву на перехідний документ після закінчення ВТЗ?", options:["Так, через IND","Так, через муніципалітет","Ні, він надсилається автоматично","Так, через SVB"], correct:2 },
+  { q:"Що таке 'huurtoeslag'?", options:["Допомога на харчування","Доплата до орендної плати","Медична страховка","Дитяча допомога"], correct:1 },
+  { q:"Які мінімальні щомісячні витрати для сім'ї з 4 осіб? (Nibud 2026)", options:["€ 1.800","€ 5.379","€ 3.145","€ 2.500"], correct:2 }
+];
+const L = ['A','B','C','D'];
+let cur=0, score=0, tmr=null, tLeft=30, done=false, playerName='';
+
+function show(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
+
+function go() {
+  const v = document.getElementById('name-input').value.trim();
+  const err = document.getElementById('name-error');
+  if (!v || v.length < 2) { err.textContent='⚠ Будь ласка, введіть ім\'я (мін. 2 символи)'; return; }
+  err.textContent=''; playerName=v;
+  cur=0; score=0;
+  document.getElementById('q-who').textContent='👤 '+playerName;
+  show('screen-quiz'); loadQ();
+}
+
+function loadQ() {
+  done=false;
+  const q=questions[cur];
+  document.getElementById('q-label').textContent=`ПИТАННЯ ${cur+1}/10`;
+  document.getElementById('q-number').textContent=`Питання ${cur+1} з 10`;
+  document.getElementById('q-text').textContent=q.q;
+  document.getElementById('progress-fill').style.width=`${(cur+1)*10}%`;
+  const fb=document.getElementById('feedback-bar'); fb.className='feedback-bar'; fb.textContent='';
+  document.getElementById('next-btn').classList.remove('visible');
+  const grid=document.getElementById('answers-grid'); grid.innerHTML='';
+  q.options.forEach((o,i)=>{ const b=document.createElement('button'); b.className='answer-btn'; b.innerHTML=`<span class="answer-letter">${L[i]}</span>${o}`; b.onclick=()=>pick(i); grid.appendChild(b); });
+  startTimer();
+}
+
+function startTimer() {
+  clearInterval(tmr); tLeft=30;
+  const el=document.getElementById('timer'); el.textContent=tLeft; el.className='timer-box';
+  tmr=setInterval(()=>{ tLeft--; el.textContent=tLeft; if(tLeft<=10) el.className='timer-box urgent'; if(tLeft<=0){clearInterval(tmr);if(!done)timeUp();} },1000);
+}
+
+function pick(idx) {
+  if(done) return; done=true; clearInterval(tmr);
+  const q=questions[cur];
+  const btns=document.querySelectorAll('.answer-btn'); btns.forEach(b=>b.disabled=true);
+  const fb=document.getElementById('feedback-bar');
+  if(idx===q.correct) { score++; btns[idx].classList.add('correct'); fb.className='feedback-bar correct'; fb.innerHTML='✅ Правильно!'; }
+  else { btns[idx].classList.add('wrong'); btns[q.correct].classList.add('correct'); fb.className='feedback-bar wrong'; fb.innerHTML=`❌ Неправильно. Правильно: <strong>${L[q.correct]}: ${q.options[q.correct]}</strong>`; }
+  document.getElementById('next-btn').classList.add('visible');
+}
+
+function timeUp() {
+  done=true;
+  const q=questions[cur]; const btns=document.querySelectorAll('.answer-btn'); btns.forEach(b=>b.disabled=true); btns[q.correct].classList.add('correct');
+  const fb=document.getElementById('feedback-bar'); fb.className='feedback-bar wrong'; fb.innerHTML=`⏰ Час вийшов! Правильно: <strong>${L[q.correct]}: ${q.options[q.correct]}</strong>`;
+  document.getElementById('next-btn').classList.add('visible');
+}
+
+function nextQ() { cur++; if(cur>=questions.length) finish(); else loadQ(); }
+
+async function finish() {
+  try {
+    const res = await fetch('/api/submit', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:playerName, score}) });
+    const data = await res.json();
+    showResult(data.rank);
+  } catch(e) { showResult(null); }
+}
+
+function showResult(rank) {
+  const colors=['#ef4444','#ef4444','#ef4444','#ef4444','#f97316','#f97316','#f97316','#10b981','#10b981','#1a3c6e','#e85d04'];
+  document.getElementById('res-name').textContent=playerName;
+  document.getElementById('res-score').textContent=`${score}/10`;
+  document.getElementById('res-score').style.color=colors[score];
+  let emoji, msg;
+  if(score===10){emoji='🏆';msg='Абсолютний чемпіон! Ви знаєте все!';}
+  else if(score>=8){emoji='🌟';msg='Відмінний результат! Ви чудово знаєте нідерландську систему!';}
+  else if(score>=6){emoji='👍';msg='Хороший результат! Є ще що вивчити — переглянь презентацію KOLAS.';}
+  else if(score>=4){emoji='📚';msg='Не засмучуйтесь — KOLAS допоможе розібратись!';}
+  else{emoji='💪';msg='Продовжуйте вчитися! Ми тут, щоб допомогти.';}
+  document.getElementById('res-emoji').textContent=emoji;
+  document.getElementById('res-msg').textContent=msg;
+
+  const rb=document.getElementById('res-rank');
+  if(rank===1){rb.textContent='🥇 1 місце!';rb.style.background='#fff3cd';rb.style.color='#7a5c00';}
+  else if(rank===2){rb.textContent='🥈 2 місце';rb.style.background='#f0f4ff';rb.style.color='#333';}
+  else if(rank===3){rb.textContent='🥉 3 місце';rb.style.background='#fff0ea';rb.style.color='#7a3a00';}
+  else if(rank){rb.textContent=`📍 ${rank} місце в рейтингу`;rb.style.background='#f0f4ff';rb.style.color='#1a3c6e';}
+  else{rb.textContent='';rb.style.display='none';}
+
+  show('screen-result');
+}
+
+function playAgain() { document.getElementById('name-input').value=''; show('screen-start'); }
+</script>
+</body>
+</html>
