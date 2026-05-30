@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KOLAS Рейтинг 🏆</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; background: #1a3c6e; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding:24px 16px; }
+  
+  .header { width:100%; max-width:1000px; text-align:center; margin-bottom:24px; }
+  .header h1 { font-size:clamp(28px,5vw,42px); font-weight:900; color:#fff; margin-bottom:6px; }
+  .header h1 span { color:#ffd23f; }
+  .header p { color:rgba(255,255,255,0.7); font-size:15px; }
+  
+  .container { width:100%; max-width:1000px; }
+  .lb-card { background:#fff; border-radius:20px; padding:28px; box-shadow:0 16px 50px rgba(0,0,0,0.35); }
+  
+  .lb-title { font-size:28px; font-weight:900; color:#1a3c6e; margin-bottom:4px; }
+  .lb-subtitle { color:#666; font-size:14px; margin-bottom:20px; }
+  
+  .lb-table { width:100%; border-collapse:collapse; }
+  .lb-table th { background:#1a3c6e; color:#ffd23f; font-size:13px; font-weight:800; padding:14px 16px; text-align:left; letter-spacing:0.5px; }
+  .lb-table th:first-child { border-radius:12px 0 0 0; }
+  .lb-table th:last-child { border-radius:0 12px 0 0; text-align:center; }
+  
+  .lb-table td { padding:16px; font-size:16px; font-weight:700; color:#111; border-bottom:1px solid #e8edf5; }
+  .lb-table tr:last-child td { border-bottom:none; }
+  .lb-table tr:nth-child(even) td { background:#f7f9ff; }
+  
+  .rank-cell { text-align:center; width:56px; font-size:24px; }
+  .name-cell { font-weight:900; color:#1a3c6e; }
+  .score-cell { text-align:center; font-size:18px; font-weight:900; }
+  .bar-wrap { background:#e8edf5; border-radius:100px; height:12px; width:100%; min-width:100px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:100px; background:linear-gradient(90deg,#10b981,#1a3c6e); transition:width 0.5s ease; }
+  
+  .highlight { background:#fff8e6 !important; }
+  .highlight td:first-child { border-left:4px solid #ffd23f; }
+  
+  .lb-empty { color:#999; font-size:16px; padding:32px; text-align:center; }
+  
+  .controls { display:flex; gap:12px; margin-top:20px; flex-wrap:wrap; }
+  .btn { font-size:14px; font-weight:800; padding:12px 24px; border:none; border-radius:12px; cursor:pointer; transition:all 0.2s; }
+  .btn-blue { background:#1a3c6e; color:#fff; }
+  .btn-blue:hover { background:#0f2447; }
+  .btn-red { background:#ef4444; color:#fff; }
+  .btn-red:hover { background:#dc2626; }
+  
+  .status { margin-top:14px; padding:12px 16px; border-radius:10px; font-size:14px; font-weight:700; text-align:center; }
+  .status.connected { background:#d1fae5; color:#065f46; }
+  .status.disconnected { background:#fee2e2; color:#7f1d1d; }
+  
+  .medal { font-size:20px; }
+  .kolas-tag { color:#999; font-size:12px; margin-top:20px; text-align:center; letter-spacing:1px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🏆 <span>KOLAS</span> Рейтинг</h1>
+  <p>Результати вікторини в реальному часі</p>
+</div>
+
+<div class="container">
+  <div class="lb-card">
+    <div class="lb-title">Рейтинг учасників</div>
+    <div class="lb-subtitle" id="lb-subtitle">Очікування результатів...</div>
+    
+    <table class="lb-table">
+      <thead>
+        <tr>
+          <th style="text-align:center;">#</th>
+          <th>Ім'я</th>
+          <th style="text-align:center;">Бали</th>
+          <th style="text-align:center;">Час</th>
+          <th>Результат</th>
+        </tr>
+      </thead>
+      <tbody id="lb-body">
+        <tr><td colspan="5" class="lb-empty">Поки що немає результатів</td></tr>
+      </tbody>
+    </table>
+    
+    <div class="controls">
+      <button class="btn btn-blue" onclick="refresh()">🔄 Оновити</button>
+      <button class="btn btn-red" onclick="clearAll()">🗑 Очистити рейтинг</button>
+    </div>
+    
+    <div class="status connected" id="status">✅ Підключено до сервера</div>
+    <p class="kolas-tag">МИ КОЛО ВАС • WIJ ZIJN DICHTBIJ • kolas.nl</p>
+  </div>
+</div>
+
+<script>
+const MEDALS = ['🥇','🥈','🥉'];
+let leaderboard = [];
+let ws = null;
+
+function connectWebSocket() {
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${protocol}//${window.location.host}`;
+  
+  ws = new WebSocket(wsUrl);
+  
+  ws.onopen = () => {
+    updateStatus(true);
+    console.log('WebSocket підключено');
+  };
+  
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.type === 'update') {
+      leaderboard = data.leaderboard || [];
+      render();
+    }
+  };
+  
+  ws.onerror = () => {
+    updateStatus(false);
+    console.error('WebSocket помилка');
+  };
+  
+  ws.onclose = () => {
+    updateStatus(false);
+    console.log('WebSocket відключено');
+    setTimeout(connectWebSocket, 3000);
+  };
+}
+
+async function refresh() {
+  try {
+    const res = await fetch('/api/leaderboard');
+    leaderboard = await res.json();
+    render();
+  } catch(e) {
+    console.error('Помилка завантаження:', e);
+  }
+}
+
+async function clearAll() {
+  if (!confirm('Очистити весь рейтинг? Це незворотньо!')) return;
+  try {
+    await fetch('/api/clear', { method: 'POST' });
+    leaderboard = [];
+    render();
+  } catch(e) {
+    console.error('Помилка очищення:', e);
+  }
+}
+
+function render() {
+  const tbody = document.getElementById('lb-body');
+  const sub = document.getElementById('lb-subtitle');
+  
+  if (leaderboard.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="lb-empty">Поки що немає результатів</td></tr>';
+    sub.textContent = 'Очікування перших результатів...';
+    return;
+  }
+  
+  sub.textContent = `Всього учасників: ${leaderboard.length} | Лідер: ${leaderboard[0].name}`;
+  tbody.innerHTML = '';
+  
+  leaderboard.forEach((p, i) => {
+    const rank = i < 3 ? MEDALS[i] : `${i+1}`;
+    const pct = Math.round((p.score / 10) * 100);
+    const barColor = p.score >= 8 ? '#10b981' : p.score >= 6 ? '#f97316' : '#ef4444';
+    
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="rank-cell">${rank}</td>
+      <td class="name-cell">${escHtml(p.name)}</td>
+      <td class="score-cell" style="color:${barColor}">${p.score}/10</td>
+      <td style="text-align:center; font-size:13px; color:#999;">${p.time}</td>
+      <td>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%; background:${barColor}"></div></div>
+          <span style="font-size:13px; color:#666; min-width:36px;">${pct}%</span>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function updateStatus(connected) {
+  const el = document.getElementById('status');
+  if (connected) {
+    el.className = 'status connected';
+    el.textContent = '✅ Підключено до сервера';
+  } else {
+    el.className = 'status disconnected';
+    el.textContent = '❌ Немає з\'єднання з сервером';
+  }
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Старт
+connectWebSocket();
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>
