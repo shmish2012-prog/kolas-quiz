@@ -3,64 +3,446 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Вікторина KOLAS 🇳🇱</title>
+<title>Vierkunde KOLAS 🇳🇱🇺🇦</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap');
+
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: Arial, Helvetica, sans-serif; background: #1a3c6e; min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:20px 16px; }
-  .screen { display:none; width:100%; max-width:700px; }
+  
+  body { 
+    font-family: 'Poppins', Arial, sans-serif; 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height:100vh; 
+    display:flex; 
+    align-items:flex-start; 
+    justify-content:center; 
+    padding:24px 16px;
+  }
+  
+  .screen { display:none; width:100%; max-width:720px; animation: fadeIn 0.5s ease; }
   .screen.active { display:block; }
-  .card { background:#fff; border-radius:22px; padding:40px 36px; box-shadow:0 16px 50px rgba(0,0,0,0.35); text-align:center; }
+  
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes pulse { 0%, 100% { transform:scale(1); } 50% { transform:scale(1.05); } }
+  @keyframes slideDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
 
-  .flag { font-size:56px; margin-bottom:12px; }
-  h1 { font-size:clamp(24px,5vw,34px); font-weight:900; color:#1a3c6e; line-height:1.2; margin-bottom:10px; }
-  h1 span { color:#e85d04; }
-  .subtitle { font-size:15px; color:#555; line-height:1.6; margin-bottom:20px; }
-  .badge-row { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:24px; }
-  .badge { background:#f0f4ff; border:2px solid #1a3c6e; border-radius:100px; padding:6px 14px; color:#1a3c6e; font-size:13px; font-weight:700; }
-  .divider { border:none; border-top:2px solid #e8edf5; margin:20px 0; }
-  .reg-label { font-size:15px; font-weight:800; color:#1a3c6e; margin-bottom:8px; text-align:left; }
-  .name-input { width:100%; font-size:17px; font-weight:700; color:#111; border:3px solid #d0d9f0; border-radius:13px; padding:14px 18px; outline:none; margin-bottom:5px; }
-  .name-input:focus { border-color:#1a3c6e; }
-  .name-error { color:#e63946; font-size:13px; font-weight:700; min-height:18px; margin-bottom:14px; text-align:left; }
-  .btn-orange { font-size:17px; font-weight:800; background:#e85d04; color:#fff; border:none; border-radius:13px; padding:16px 44px; cursor:pointer; box-shadow:0 5px 18px rgba(232,93,4,0.4); }
-  .btn-orange:hover { background:#c94e00; }
-  .kolas-tag { color:#999; font-size:11px; margin-top:18px; letter-spacing:1px; }
+  .card { 
+    background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%);
+    border-radius:32px; 
+    padding:48px 36px; 
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.5);
+  }
 
-  .quiz-top { background:#fff; border-radius:18px; padding:13px 20px; display:flex; align-items:center; gap:13px; margin-bottom:12px; box-shadow:0 4px 18px rgba(0,0,0,0.2); }
-  .q-who { font-size:13px; font-weight:800; color:#e85d04; white-space:nowrap; max-width:140px; overflow:hidden; text-overflow:ellipsis; }
-  .q-label { font-size:12px; font-weight:800; color:#1a3c6e; white-space:nowrap; }
-  .progress-bar { flex:1; height:9px; background:#e0e7ff; border-radius:100px; overflow:hidden; }
-  .progress-fill { height:100%; background:linear-gradient(90deg,#e85d04,#ffd23f); border-radius:100px; transition:width 0.5s; }
-  .timer-box { width:46px; height:46px; border-radius:50%; background:#1a3c6e; color:#ffd23f; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:900; flex-shrink:0; border:3px solid #ffd23f; }
-  .timer-box.urgent { background:#e63946; border-color:#e63946; color:#fff; }
-  .question-card { background:#fff; border-radius:18px; padding:28px 28px 22px; text-align:center; margin-bottom:11px; box-shadow:0 4px 18px rgba(0,0,0,0.2); }
-  .q-number { display:inline-block; background:#e85d04; color:#fff; font-size:11px; font-weight:800; padding:5px 14px; border-radius:100px; margin-bottom:12px; }
-  .q-text { font-size:clamp(16px,2.8vw,21px); font-weight:800; color:#111; line-height:1.4; }
-  .feedback-bar { border-radius:12px; padding:12px 16px; font-size:14px; font-weight:700; margin-bottom:10px; display:none; }
-  .feedback-bar.correct { display:block; background:#d1fae5; color:#065f46; border:2px solid #34d399; }
-  .feedback-bar.wrong { display:block; background:#fee2e2; color:#7f1d1d; border:2px solid #f87171; }
-  .answers-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:11px; }
-  .answer-btn { background:#fff; border:3px solid #d0d9f0; border-radius:14px; padding:15px 16px; color:#111; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:10px; text-align:left; min-height:60px; box-shadow:0 2px 7px rgba(0,0,0,0.08); transition:all 0.15s; }
-  .answer-btn:hover:not(:disabled) { border-color:#1a3c6e; background:#f0f4ff; }
-  .answer-letter { width:30px; height:30px; border-radius:8px; background:#e0e7ff; color:#1a3c6e; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:900; flex-shrink:0; }
-  .answer-btn.correct { background:#d1fae5; border-color:#10b981; }
-  .answer-btn.correct .answer-letter { background:#10b981; color:#fff; }
-  .answer-btn.wrong { background:#fee2e2; border-color:#ef4444; }
-  .answer-btn.wrong .answer-letter { background:#ef4444; color:#fff; }
-  .answer-btn:disabled { cursor:default; }
-  .btn-yellow { font-size:15px; font-weight:800; background:#ffd23f; color:#111; border:none; border-radius:13px; padding:14px 40px; cursor:pointer; display:none; box-shadow:0 4px 14px rgba(255,210,63,0.45); }
-  .btn-yellow.visible { display:inline-block; }
+  .kolas-logo { 
+    width:140px; 
+    height:140px; 
+    margin:0 auto 16px; 
+    animation: pulse 2s infinite;
+  }
 
-  .result-hero { font-size:60px; margin-bottom:10px; }
-  .result-name { font-size:20px; font-weight:900; color:#1a3c6e; margin-bottom:4px; }
-  .score-big { font-size:clamp(56px,12vw,84px); font-weight:900; line-height:1; margin:12px 0 4px; }
-  .score-label { color:#666; font-size:14px; font-weight:600; margin-bottom:10px; }
-  .rank-badge { display:inline-block; font-size:15px; font-weight:800; padding:8px 20px; border-radius:100px; margin-bottom:14px; }
-  .result-msg { color:#333; font-size:15px; line-height:1.6; margin-bottom:22px; }
-  .btn-outline { font-size:14px; font-weight:800; background:transparent; color:#1a3c6e; border:3px solid #1a3c6e; border-radius:13px; padding:12px 28px; cursor:pointer; }
-  .btn-outline:hover { background:#f0f4ff; }
+  h1 { 
+    font-size:clamp(28px,5vw,44px); 
+    font-weight:900; 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height:1.2; 
+    margin-bottom:12px;
+    text-align: center;
+  }
+  
+  .subtitle { 
+    font-size:15px; 
+    color:#666; 
+    line-height:1.7; 
+    margin-bottom:24px;
+    text-align: center;
+  }
 
-  @media(max-width:500px) { .answers-grid { grid-template-columns:1fr; } .card { padding:26px 16px; } .question-card { padding:20px 14px 16px; } }
+  .badge-row { 
+    display:flex; 
+    gap:10px; 
+    justify-content:center; 
+    flex-wrap:wrap; 
+    margin-bottom:28px;
+  }
+  
+  .badge { 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border-radius:20px; 
+    padding:8px 18px; 
+    font-size:13px; 
+    font-weight:700;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  }
+
+  .divider { 
+    border:none; 
+    border-top:2px solid rgba(102,126,234,0.2); 
+    margin:24px 0;
+  }
+
+  .lang-selector { 
+    display:flex; 
+    gap:12px; 
+    justify-content:center; 
+    margin-bottom:20px;
+  }
+  
+  .lang-btn { 
+    font-size:15px; 
+    font-weight:700;
+    background: transparent; 
+    border:2px solid #ddd; 
+    color:#333; 
+    border-radius:16px; 
+    padding:10px 22px; 
+    cursor:pointer; 
+    transition:all 0.3s;
+  }
+  
+  .lang-btn.active { 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color:#fff; 
+    border-color: transparent;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  }
+  
+  .lang-btn:hover { transform: translateY(-2px); }
+
+  .reg-label { 
+    font-size:15px; 
+    font-weight:700; 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom:10px; 
+    text-align:left;
+  }
+
+  .name-input { 
+    width:100%; 
+    font-size:16px; 
+    font-weight:600;
+    color:#111; 
+    border:2px solid #ddd; 
+    border-radius:16px; 
+    padding:14px 18px; 
+    outline:none; 
+    margin-bottom:6px;
+    transition: all 0.3s;
+  }
+  
+  .name-input:focus { 
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  .name-error { 
+    color:#e63946; 
+    font-size:13px; 
+    font-weight:700; 
+    min-height:18px; 
+    margin-bottom:16px; 
+    text-align:left;
+  }
+
+  .btn-start { 
+    font-size:17px; 
+    font-weight:800;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color:#fff; 
+    border:none; 
+    border-radius:16px; 
+    padding:16px 48px; 
+    cursor:pointer; 
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s;
+    width: 100%;
+  }
+  
+  .btn-start:hover { 
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(102, 126, 234, 0.5);
+  }
+
+  .kolas-tag { 
+    color:#999; 
+    font-size:12px; 
+    margin-top:20px; 
+    letter-spacing:1px;
+    text-align: center;
+  }
+
+  /* QUIZ */
+  .quiz-top { 
+    background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.85) 100%);
+    border-radius:20px; 
+    padding:14px 20px; 
+    display:flex; 
+    align-items:center; 
+    gap:14px; 
+    margin-bottom:14px; 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    backdrop-filter: blur(10px);
+  }
+
+  .q-who { 
+    font-size:13px; 
+    font-weight:800; 
+    color: #667eea;
+    white-space:nowrap; 
+    max-width:150px; 
+    overflow:hidden; 
+    text-overflow:ellipsis;
+  }
+
+  .q-label { 
+    font-size:12px; 
+    font-weight:800; 
+    color:#667eea;
+    white-space:nowrap;
+  }
+
+  .progress-bar { 
+    flex:1; 
+    height:10px; 
+    background: rgba(102,126,234,0.1);
+    border-radius:100px; 
+    overflow:hidden;
+  }
+
+  .progress-fill { 
+    height:100%; 
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius:100px; 
+    transition:width 0.5s ease;
+  }
+
+  .timer-box { 
+    width:48px; 
+    height:48px; 
+    border-radius:50%; 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color:#fff;
+    display:flex; 
+    align-items:center; 
+    justify-content:center; 
+    font-size:18px; 
+    font-weight:900; 
+    flex-shrink:0;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  }
+
+  .timer-box.urgent { 
+    background: linear-gradient(135deg, #f85032 0%, #ff6b35 100%);
+    animation: pulse 0.5s infinite;
+  }
+
+  .question-card { 
+    background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%);
+    border-radius:20px; 
+    padding:32px 28px 24px; 
+    text-align:center; 
+    margin-bottom:12px; 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    backdrop-filter: blur(10px);
+  }
+
+  .q-number { 
+    display:inline-block; 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color:#fff; 
+    font-size:12px; 
+    font-weight:800; 
+    padding:6px 16px; 
+    border-radius:20px; 
+    margin-bottom:14px;
+  }
+
+  .q-text { 
+    font-size:clamp(17px,3vw,22px); 
+    font-weight:800; 
+    color:#111; 
+    line-height:1.5;
+  }
+
+  .feedback-bar { 
+    border-radius:14px; 
+    padding:13px 18px; 
+    font-size:14px; 
+    font-weight:700; 
+    margin-bottom:11px; 
+    display:none;
+    animation: slideDown 0.3s ease;
+  }
+
+  .feedback-bar.correct { 
+    display:block; 
+    background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%);
+    color:#059669; 
+    border:2px solid #34d399;
+  }
+
+  .feedback-bar.wrong { 
+    display:block; 
+    background: linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(239,68,68,0.05) 100%);
+    color:#dc2626; 
+    border:2px solid #f87171;
+  }
+
+  .answers-grid { 
+    display:grid; 
+    grid-template-columns:1fr 1fr; 
+    gap:11px; 
+    margin-bottom:12px;
+  }
+
+  .answer-btn { 
+    background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.85) 100%);
+    border:2px solid #e5e7eb; 
+    border-radius:16px; 
+    padding:16px 14px; 
+    color:#111; 
+    font-size:14px; 
+    font-weight:700;
+    cursor:pointer; 
+    display:flex; 
+    align-items:center; 
+    gap:10px; 
+    text-align:left; 
+    min-height:62px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.2s;
+  }
+
+  .answer-btn:hover:not(:disabled) { 
+    border-color:#667eea; 
+    background: linear-gradient(135deg, rgba(102,126,234,0.05) 0%, rgba(102,126,234,0.02) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102,126,234,0.2);
+  }
+
+  .answer-letter { 
+    width:32px; 
+    height:32px; 
+    border-radius:10px; 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color:#fff;
+    display:flex; 
+    align-items:center; 
+    justify-content:center; 
+    font-size:13px; 
+    font-weight:900; 
+    flex-shrink:0;
+  }
+
+  .answer-btn.correct { 
+    background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%);
+    border-color:#34d399;
+    animation: pulse 0.4s ease;
+  }
+
+  .answer-btn.correct .answer-letter { 
+    background: linear-gradient(135deg, #10b981, #059669);
+  }
+
+  .answer-btn.wrong { 
+    background: linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(239,68,68,0.05) 100%);
+    border-color:#f87171;
+  }
+
+  .answer-btn.wrong .answer-letter { 
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+  }
+
+  .btn-next { 
+    font-size:15px; 
+    font-weight:800; 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color:#fff; 
+    border:none; 
+    border-radius:16px; 
+    padding:14px 44px; 
+    cursor:pointer; 
+    display:none; 
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+    transition: all 0.2s;
+  }
+
+  .btn-next.visible { display:inline-block; }
+  .btn-next:hover { transform: translateY(-2px); }
+
+  /* RESULT */
+  .result-hero { font-size:72px; margin-bottom:12px; animation: pulse 0.5s ease; }
+  .result-name { 
+    font-size:22px; 
+    font-weight:900; 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom:6px;
+  }
+
+  .score-big { 
+    font-size:clamp(64px,12vw,90px); 
+    font-weight:900; 
+    line-height:1; 
+    margin:16px 0 6px;
+  }
+
+  .score-label { 
+    color:#666; 
+    font-size:15px; 
+    font-weight:600; 
+    margin-bottom:12px;
+  }
+
+  .rank-badge { 
+    display:inline-block; 
+    font-size:15px; 
+    font-weight:800; 
+    padding:10px 22px; 
+    border-radius:20px; 
+    margin-bottom:16px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+  }
+
+  .result-msg { 
+    color:#333; 
+    font-size:15px; 
+    line-height:1.7; 
+    margin-bottom:26px;
+  }
+
+  .btn-outline { 
+    font-size:15px; 
+    font-weight:800; 
+    background:transparent; 
+    color:#667eea;
+    border:2px solid #667eea; 
+    border-radius:16px; 
+    padding:12px 32px; 
+    cursor:pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-outline:hover { 
+    background: linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(102,126,234,0.05) 100%);
+    transform: translateY(-2px);
+  }
+
+  @media(max-width:500px) { 
+    .answers-grid { grid-template-columns:1fr; } 
+    .card { padding:28px 20px; } 
+    .question-card { padding:24px 16px 18px; }
+  }
 </style>
 </head>
 <body>
@@ -68,21 +450,28 @@
 <!-- START / REGISTER -->
 <div class="screen active" id="screen-start">
   <div class="card">
-    <div class="flag">🇳🇱</div>
-    <h1>Вікторина:<br><span>Вартість життя</span><br>у Нідерландах</h1>
-    <p class="subtitle">Перевірте свої знання про зарплати, витрати та виплати в Нідерландах 2026.</p>
+    <img src="kolas-logo.gif" class="kolas-logo" alt="KOLAS Logo">
+    <h1>Вікторина:<br>Вартість життя<br>у Нідерландах</h1>
+    <p class="subtitle">Перевірте свої знання про зарплати, витрати та виплати в Нідерландах 2026</p>
+    
     <div class="badge-row">
-      <div class="badge">🎯 10 питань</div>
-      <div class="badge">⏱ 30 сек</div>
+      <div class="badge">🎯 <span id="badge-q">10 питань</span></div>
+      <div class="badge">⏱ <span id="badge-time">30 сек</span></div>
       <div class="badge">📊 Nibud / CBS 2026</div>
     </div>
+    
+    <div class="lang-selector">
+      <button class="lang-btn active" onclick="setLang('uk')">🇺🇦 Українська</button>
+      <button class="lang-btn" onclick="setLang('nl')">🇳🇱 Nederlands</button>
+    </div>
+
     <hr class="divider">
-    <p class="reg-label">👤 Введіть своє ім'я:</p>
-    <input class="name-input" id="name-input" type="text" placeholder="Ваше ім'я" maxlength="40"
+    <p class="reg-label" id="reg-label">👤 Введіть своє ім'я:</p>
+    <input class="name-input" id="name-input" type="text" placeholder="" maxlength="40"
       onkeydown="if(event.key==='Enter') go()" autocomplete="off" />
     <div class="name-error" id="name-error"></div>
-    <button class="btn-orange" onclick="go()">▶ Розпочати</button>
-    <p class="kolas-tag">МИ КОЛО ВАС • kolas.nl</p>
+    <button class="btn-start" id="btn-start" onclick="go()">▶ Розпочати вікторину</button>
+    <p class="kolas-tag">МИ КОЛО ВАС • WIJ ZIJN DICHTBIJ • kolas.nl</p>
   </div>
 </div>
 
@@ -100,8 +489,8 @@
   </div>
   <div id="feedback-bar" class="feedback-bar"></div>
   <div class="answers-grid" id="answers-grid"></div>
-  <button class="btn-yellow" id="next-btn" onclick="nextQ()">Далі →</button>
-  <p class="kolas-tag" style="color:#aac4ff;text-align:center;margin-top:12px;">KOLAS — МИ КОЛО ВАС</p>
+  <center><button class="btn-next" id="next-btn" onclick="nextQ()">Далі →</button></center>
+  <p class="kolas-tag" style="color:rgba(102,126,234,0.6);text-align:center;margin-top:14px;">KOLAS — МИ КОЛО ВАС</p>
 </div>
 
 <!-- RESULT -->
@@ -110,16 +499,18 @@
     <div class="result-hero" id="res-emoji">🏆</div>
     <div class="result-name" id="res-name"></div>
     <div class="score-big" id="res-score">0/10</div>
-    <div class="score-label">правильних відповідей</div>
+    <div class="score-label" id="res-label">правильних відповідей</div>
     <div class="rank-badge" id="res-rank"></div>
     <div class="result-msg" id="res-msg"></div>
-    <button class="btn-outline" onclick="playAgain()">🔄 Зіграти ще раз</button>
+    <center>
+      <button class="btn-outline" id="btn-again" onclick="playAgain()">🔄 Зіграти ще раз</button>
+    </center>
     <p class="kolas-tag">МИ КОЛО ВАС • WIJ ZIJN DICHTBIJ</p>
   </div>
 </div>
 
 <script>
-const questions = [
+const questionsUK = [
   { q:"Яка мінімальна погодинна ставка зарплати в Нідерландах для осіб від 21 року у 2026 році?", options:["€ 12,50","€ 14,71","€ 16,00","€ 13,20"], correct:1 },
   { q:"Скільки в середньому коштує базова медична страховка на місяць?", options:["€ 75","€ 200","€ 135–160","€ 50"], correct:2 },
   { q:"Яка максимальна орендна плата за соціальне житло в Нідерландах у 2026 році?", options:["€ 800/міс","€ 932,93/міс","€ 1.228,07/міс","€ 1.500/міс"], correct:1 },
@@ -131,15 +522,94 @@ const questions = [
   { q:"Що таке 'huurtoeslag'?", options:["Допомога на харчування","Доплата до орендної плати","Медична страховка","Дитяча допомога"], correct:1 },
   { q:"Які мінімальні щомісячні витрати для сім'ї з 4 осіб? (Nibud 2026)", options:["€ 1.800","€ 5.379","€ 3.145","€ 2.500"], correct:2 }
 ];
+
+const questionsNL = [
+  { q:"Wat is het minimumloon per uur voor 21-jarigen in Nederland in 2026?", options:["€ 12,50","€ 14,71","€ 16,00","€ 13,20"], correct:1 },
+  { q:"Hoeveel kost een basisverzekering gemiddeld per maand?", options:["€ 75","€ 200","€ 135–160","€ 50"], correct:2 },
+  { q:"Wat is de maximale huur voor sociale huisvesting in Nederland in 2026?", options:["€ 800/mnd","€ 932,93/mnd","€ 1.228,07/mnd","€ 1.500/mnd"], correct:1 },
+  { q:"Hoe lang geldig is een overgangskaart na afloop van verblijfsstatus?", options:["1 jaar","5 jaar","3 jaar","Onbeperkt"], correct:2 },
+  { q:"Wat is 'eigen risico' in Nederlandse ziektekosten?", options:["Verplicht eigenrisico — € 385/jaar","Maandelijkse premie","Boete voor geen verzekering","Type extra verzekering"], correct:0 },
+  { q:"Wat is de pensioenleeftijd (AOW) in Nederland in 2026?", options:["65 jaar","70 jaar","67 jaar","63 jaar"], correct:2 },
+  { q:"Hoeveel % AOW-pensioen bouw je op per jaar in Nederland?", options:["1%","5%","3%","2%"], correct:3 },
+  { q:"Moet je zelf een aanvraag indienen voor een overgangskaart na verblijfsstatus?", options:["Ja, via IND","Ja, via gemeente","Nee, automatisch verzonden","Ja, via SVB"], correct:2 },
+  { q:"Wat is 'huurtoeslag'?", options:["Voedselsteun","Huursubsidie","Ziektekosten","Kinderopvang"], correct:1 },
+  { q:"Wat zijn minimum maandelijkse uitgaven voor een gezin van 4? (Nibud 2026)", options:["€ 1.800","€ 5.379","€ 3.145","€ 2.500"], correct:2 }
+];
+
+const strings = {
+  uk: {
+    badge_q: "10 питань",
+    badge_time: "30 сек",
+    reg_label: "👤 Введіть своє ім'я:",
+    placeholder: "Ваше ім'я",
+    btn_start: "▶ Розпочати вікторину",
+    q_label: (n) => `ПИТАННЯ ${n}/10`,
+    q_number: (n) => `Питання ${n} з 10`,
+    next: "Далі →",
+    correct: "✅ Правильно!",
+    wrong: (l,o) => `❌ Неправильно. Правильно: <strong>${l}: ${o}</strong>`,
+    timeout: (l,o) => `⏰ Час вийшов! Правильно: <strong>${l}: ${o}</strong>`,
+    res_label: "правильних відповідей",
+    res_champ: "Абсолютний чемпіон! Ви знаєте все!",
+    res_great: "Відмінний результат! Ви чудово знаєте нідерландську систему!",
+    res_good: "Хороший результат! Є ще що вивчити — переглянь презентацію KOLAS.",
+    res_ok: "Не засмучуйтесь — KOLAS допоможе розібратись!",
+    res_learn: "Продовжуйте вчитися! Ми тут, щоб допомогти.",
+    res_again: "🔄 Зіграти ще раз",
+    error: "⚠ Будь ласка, введіть ім'я (мін. 2 символи)"
+  },
+  nl: {
+    badge_q: "10 vragen",
+    badge_time: "30 sec",
+    reg_label: "👤 Voer je naam in:",
+    placeholder: "Jouw naam",
+    btn_start: "▶ Quiz starten",
+    q_label: (n) => `VRAAG ${n}/10`,
+    q_number: (n) => `Vraag ${n} van 10`,
+    next: "Volgende →",
+    correct: "✅ Correct!",
+    wrong: (l,o) => `❌ Fout. Juist antwoord: <strong>${l}: ${o}</strong>`,
+    timeout: (l,o) => `⏰ Tijd om! Juist antwoord: <strong>${l}: ${o}</strong>`,
+    res_label: "juiste antwoorden",
+    res_champ: "Absolute kampioen! Je kent alles!",
+    res_great: "Uitstekend resultaat! Je begrijpt het Nederlandse systeem goed!",
+    res_good: "Goed gedaan! Er is nog wat te leren — bekijk de KOLAS presentatie.",
+    res_ok: "Niet triest — KOLAS helpt je dit te begrijpen!",
+    res_learn: "Ga door met leren! Wij zijn hier om te helpen.",
+    res_again: "🔄 Opnieuw spelen",
+    error: "⚠ Voer alstublieft een naam in (min. 2 karakters)"
+  }
+};
+
 const L = ['A','B','C','D'];
+let lang = 'uk';
+let questions = questionsUK;
 let cur=0, score=0, tmr=null, tLeft=30, done=false, playerName='';
+
+function setLang(newLang) {
+  lang = newLang;
+  questions = (lang === 'uk') ? questionsUK : questionsNL;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  updateUI();
+}
+
+function updateUI() {
+  const s = strings[lang];
+  document.getElementById('badge-q').textContent = s.badge_q;
+  document.getElementById('badge-time').textContent = s.badge_time;
+  document.getElementById('reg-label').textContent = s.reg_label;
+  document.getElementById('name-input').placeholder = s.placeholder;
+  document.getElementById('btn-start').textContent = s.btn_start;
+  document.getElementById('btn-again').textContent = s.res_again;
+}
 
 function show(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
 
 function go() {
   const v = document.getElementById('name-input').value.trim();
   const err = document.getElementById('name-error');
-  if (!v || v.length < 2) { err.textContent='⚠ Будь ласка, введіть ім\'я (мін. 2 символи)'; return; }
+  if (!v || v.length < 2) { err.textContent = strings[lang].error; return; }
   err.textContent=''; playerName=v;
   cur=0; score=0;
   document.getElementById('q-who').textContent='👤 '+playerName;
@@ -149,8 +619,9 @@ function go() {
 function loadQ() {
   done=false;
   const q=questions[cur];
-  document.getElementById('q-label').textContent=`ПИТАННЯ ${cur+1}/10`;
-  document.getElementById('q-number').textContent=`Питання ${cur+1} з 10`;
+  const s = strings[lang];
+  document.getElementById('q-label').textContent = s.q_label(cur+1);
+  document.getElementById('q-number').textContent = s.q_number(cur+1);
   document.getElementById('q-text').textContent=q.q;
   document.getElementById('progress-fill').style.width=`${(cur+1)*10}%`;
   const fb=document.getElementById('feedback-bar'); fb.className='feedback-bar'; fb.textContent='';
@@ -169,17 +640,20 @@ function startTimer() {
 function pick(idx) {
   if(done) return; done=true; clearInterval(tmr);
   const q=questions[cur];
+  const s = strings[lang];
   const btns=document.querySelectorAll('.answer-btn'); btns.forEach(b=>b.disabled=true);
   const fb=document.getElementById('feedback-bar');
-  if(idx===q.correct) { score++; btns[idx].classList.add('correct'); fb.className='feedback-bar correct'; fb.innerHTML='✅ Правильно!'; }
-  else { btns[idx].classList.add('wrong'); btns[q.correct].classList.add('correct'); fb.className='feedback-bar wrong'; fb.innerHTML=`❌ Неправильно. Правильно: <strong>${L[q.correct]}: ${q.options[q.correct]}</strong>`; }
+  if(idx===q.correct) { score++; btns[idx].classList.add('correct'); fb.className='feedback-bar correct'; fb.innerHTML=s.correct; }
+  else { btns[idx].classList.add('wrong'); btns[q.correct].classList.add('correct'); fb.className='feedback-bar wrong'; fb.innerHTML=s.wrong(L[q.correct],q.options[q.correct]); }
   document.getElementById('next-btn').classList.add('visible');
 }
 
 function timeUp() {
   done=true;
-  const q=questions[cur]; const btns=document.querySelectorAll('.answer-btn'); btns.forEach(b=>b.disabled=true); btns[q.correct].classList.add('correct');
-  const fb=document.getElementById('feedback-bar'); fb.className='feedback-bar wrong'; fb.innerHTML=`⏰ Час вийшов! Правильно: <strong>${L[q.correct]}: ${q.options[q.correct]}</strong>`;
+  const q=questions[cur]; 
+  const s = strings[lang];
+  const btns=document.querySelectorAll('.answer-btn'); btns.forEach(b=>b.disabled=true); btns[q.correct].classList.add('correct');
+  const fb=document.getElementById('feedback-bar'); fb.className='feedback-bar wrong'; fb.innerHTML=s.timeout(L[q.correct],q.options[q.correct]);
   document.getElementById('next-btn').classList.add('visible');
 }
 
@@ -194,30 +668,35 @@ async function finish() {
 }
 
 function showResult(rank) {
-  const colors=['#ef4444','#ef4444','#ef4444','#ef4444','#f97316','#f97316','#f97316','#10b981','#10b981','#1a3c6e','#e85d04'];
+  const s = strings[lang];
+  const colors=['#ef4444','#ef4444','#ef4444','#ef4444','#f97316','#f97316','#f97316','#10b981','#10b981','#667eea','#764ba2'];
   document.getElementById('res-name').textContent=playerName;
   document.getElementById('res-score').textContent=`${score}/10`;
   document.getElementById('res-score').style.color=colors[score];
+  document.getElementById('res-label').textContent = s.res_label;
+  
   let emoji, msg;
-  if(score===10){emoji='🏆';msg='Абсолютний чемпіон! Ви знаєте все!';}
-  else if(score>=8){emoji='🌟';msg='Відмінний результат! Ви чудово знаєте нідерландську систему!';}
-  else if(score>=6){emoji='👍';msg='Хороший результат! Є ще що вивчити — переглянь презентацію KOLAS.';}
-  else if(score>=4){emoji='📚';msg='Не засмучуйтесь — KOLAS допоможе розібратись!';}
-  else{emoji='💪';msg='Продовжуйте вчитися! Ми тут, щоб допомогти.';}
+  if(score===10){emoji='🏆';msg=s.res_champ;}
+  else if(score>=8){emoji='🌟';msg=s.res_great;}
+  else if(score>=6){emoji='👍';msg=s.res_good;}
+  else if(score>=4){emoji='📚';msg=s.res_ok;}
+  else{emoji='💪';msg=s.res_learn;}
   document.getElementById('res-emoji').textContent=emoji;
   document.getElementById('res-msg').textContent=msg;
 
   const rb=document.getElementById('res-rank');
-  if(rank===1){rb.textContent='🥇 1 місце!';rb.style.background='#fff3cd';rb.style.color='#7a5c00';}
-  else if(rank===2){rb.textContent='🥈 2 місце';rb.style.background='#f0f4ff';rb.style.color='#333';}
-  else if(rank===3){rb.textContent='🥉 3 місце';rb.style.background='#fff0ea';rb.style.color='#7a3a00';}
-  else if(rank){rb.textContent=`📍 ${rank} місце в рейтингу`;rb.style.background='#f0f4ff';rb.style.color='#1a3c6e';}
+  if(rank===1){rb.textContent='🥇 1 '+(lang==='uk'?'місце!':'plaats!');rb.style.background='linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)';rb.style.color='#7c2d12';}
+  else if(rank===2){rb.textContent='🥈 2 '+(lang==='uk'?'місце':'plaats');rb.style.background='linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%)';rb.style.color='#374151';}
+  else if(rank===3){rb.textContent='🥉 3 '+(lang==='uk'?'місце':'plaats');rb.style.background='linear-gradient(135deg, #fed7aa 0%, #fdba74 100%)';rb.style.color='#7c2d12';}
+  else if(rank){rb.textContent=(lang==='uk'?'📍 '+rank+' місце в рейтингу':'📍 '+rank+' plaats in ranking');rb.style.background='linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(102,126,234,0.05) 100%)';rb.style.color='#667eea';}
   else{rb.textContent='';rb.style.display='none';}
 
   show('screen-result');
 }
 
 function playAgain() { document.getElementById('name-input').value=''; show('screen-start'); }
+
+updateUI();
 </script>
 </body>
 </html>
