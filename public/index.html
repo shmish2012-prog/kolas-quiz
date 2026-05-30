@@ -489,7 +489,7 @@
   </div>
   <div id="feedback-bar" class="feedback-bar"></div>
   <div class="answers-grid" id="answers-grid"></div>
-  <center><button class="btn-next" id="next-btn" onclick="nextQ()">Далі →</button></center>
+  <button class="btn-next" id="next-btn" onclick="nextQ()" data-uk="Далі →" data-nl="Volgende →">Далі →</button>
   <p class="kolas-tag" style="color:rgba(102,126,234,0.6);text-align:center;margin-top:14px;">KOLAS — МИ КОЛО ВАС</p>
 </div>
 
@@ -592,6 +592,7 @@ function setLang(newLang) {
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
   updateUI();
+  document.getElementById('next-btn').textContent = (lang === 'uk') ? 'Далі →' : 'Volgende →';
 }
 
 function updateUI() {
