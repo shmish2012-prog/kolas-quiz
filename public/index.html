@@ -594,6 +594,7 @@ const L = ['A','B','C','D'];
 let lang = 'uk';
 let questions = questionsUK;
 let cur=0, score=0, tmr=null, tLeft=30, done=false, playerName='';
+let quizStartTime = null;
 
 function setLang(newLang) {
   lang = newLang;
@@ -645,6 +646,7 @@ function loadQ() {
   document.getElementById('next-btn').classList.remove('visible');
   const grid=document.getElementById('answers-grid'); grid.innerHTML='';
   q.options.forEach((o,i)=>{ const b=document.createElement('button'); b.className='answer-btn'; b.innerHTML=`<span class="answer-letter">${L[i]}</span>${o}`; b.onclick=()=>pick(i); grid.appendChild(b); });
+  if (cur === 0) quizStartTime = Date.now(); // Збираємо час на першому питанні
   startTimer();
 }
 
@@ -677,8 +679,13 @@ function timeUp() {
 function nextQ() { cur++; if(cur>=questions.length) finish(); else loadQ(); }
 
 async function finish() {
+  const timeSpent = quizStartTime ? Math.round((Date.now() - quizStartTime) / 1000) : 0;
+  const minutes = Math.floor(timeSpent / 60);
+  const seconds = timeSpent % 60;
+  const timeSpentStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  
   try {
-    const res = await fetch('/api/submit', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:playerName, score}) });
+    const res = await fetch('/api/submit', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:playerName, score, timeSpent: timeSpentStr}) });
     const data = await res.json();
     showResult(data.rank);
   } catch(e) { showResult(null); }
