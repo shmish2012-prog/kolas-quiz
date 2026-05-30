@@ -153,24 +153,37 @@ function render() {
   const sub = document.getElementById('lb-subtitle');
   
   if (leaderboard.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="lb-empty">Поки що немає результатів</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="lb-empty">Поки що немає результатів</td></tr>';
     sub.textContent = 'Очікування перших результатів...';
     return;
   }
   
-  sub.textContent = `Всього учасників: ${leaderboard.length} | Лідер: ${leaderboard[0].name}`;
+  // Сортування: по балам (більше = краще), потім по часу (менше = краще)
+  const sorted = [...leaderboard].sort((a, b) => {
+    if (b.score !== a.score) {
+      return b.score - a.score; // По балам (спадаюче)
+    }
+    // Якщо бали рівні - по часу
+    const timeA = parseTime(a.timeSpent || "00:00");
+    const timeB = parseTime(b.timeSpent || "00:00");
+    return timeA - timeB; // По часу (зростаюче - швидше вгорі)
+  });
+  
+  sub.textContent = `Всього учасників: ${leaderboard.length} | Топ: ${sorted[0].name} (${sorted[0].score}/10)`;
   tbody.innerHTML = '';
   
-  leaderboard.forEach((p, i) => {
+  sorted.slice(0, 10).forEach((p, i) => {
     const rank = i < 3 ? MEDALS[i] : `${i+1}`;
     const pct = Math.round((p.score / 10) * 100);
     const barColor = p.score >= 8 ? '#10b981' : p.score >= 6 ? '#f97316' : '#ef4444';
+    const timeSpent = p.timeSpent || '00:00';
     
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="rank-cell">${rank}</td>
       <td class="name-cell">${escHtml(p.name)}</td>
       <td class="score-cell" style="color:${barColor}">${p.score}/10</td>
+      <td style="text-align:center; font-size:13px; color:#999; min-width:60px;">⏱ ${timeSpent}</td>
       <td style="text-align:center; font-size:13px; color:#999;">${p.time}</td>
       <td>
         <div style="display:flex; align-items:center; gap:10px;">
@@ -180,6 +193,11 @@ function render() {
       </td>`;
     tbody.appendChild(tr);
   });
+}
+
+function parseTime(timeStr) {
+  const parts = timeStr.split(':');
+  return parseInt(parts[0]) * 60 + parseInt(parts[1]);
 }
 
 function updateStatus(connected) {
